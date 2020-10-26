@@ -1,0 +1,5 @@
+exportPattern("^[[:alpha:]]+")
+import(pracma,"pracma")
+importFrom(utils,packageVersion)
+importFrom("stats","na.omit", "rbinom")
+importFrom("stats", "D", "integrate")
