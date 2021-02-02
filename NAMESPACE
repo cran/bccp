@@ -1,5 +1,5 @@
 exportPattern("^[[:alpha:]]+")
 import(pracma,"pracma")
 importFrom(utils,packageVersion)
-importFrom("stats","na.omit", "rbinom")
-importFrom("stats", "D", "integrate")
+importFrom("stats","na.omit", "rbinom", "D", "integrate", "uniroot", "qnorm", "optim", "median", "quantile", "runif")
+importFrom("grDevices", "pdf")
