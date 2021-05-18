@@ -15,7 +15,7 @@
 \item{N}{An even integer value indicating the number of subdivisions for applying Simpson's integration method.}
 }
 \details{For some families of distributions whose support is the positive semi-axis, i.e., \eqn{x>0}, the cumulative distribution function (cdf) may not be differentiable. In this case, the lower bound of the support of random variable, i.e., \code{lb} that is zero by default, must be chosen some positive small value to ensure the differentiability of the cdf.}
-\value{A list of the outputs including: a matric that represents the variance-covariance matrix of the MLE, a matrix that represents the variance-covariance matrix of the bias corrected MLE, a list of three outputs including MLE, bias of MLE, and bias corrected MLE, a list of godness-of-fit measures consists of Anderson-Darling (\code{AD}), Cramer-von Misses (\code{CVM}), log-likelihood statistics.}
+\value{A list of the outputs including: a matric that represents the variance-covariance matrix of the MLE, a matrix that represents the variance-covariance matrix of the bias corrected MLE, a list of three outputs including MLE, bias of MLE, and bias corrected MLE, a list of godness-of-fit measures consists of Anderson-Darling (\code{AD}), Cramer-von Misses (\code{CVM}), and Kolmogorov-Smirnov (\code{KS}), statistics.}
 \references{
 D. R. Cox and E. J. Snell 1968. A general definition of residuals. \emph{Journal of the Royal Statistical Society: Series B (Methodological)}, 30(2), 248-265.
 

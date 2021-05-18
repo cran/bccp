@@ -20,7 +20,7 @@ where \eqn{R_0=0}, \eqn{\gamma_{i}=\bigl(\sum_{j=1}^{i}{X_j}+\sum_{j=1}^{i-1}{R_
 \item{lb}{Lower bound of the family support. That is zero by default.}
 }
 \details{We note that for lifetime distributions whose support is the positive semi-axis, i.e., \eqn{x>0}, the cumulative distribution function (cdf) may not be differentiable. In this case, the lower bound of the support of random variable, i.e., \code{lb} that is zero by default, must be chosen some positive small value to ensure the differentiability of the cdf. Theoretically, for lifetime distribution, we have \code{lb}\eqn{=T_{0}=0}.}
-\value{A vector of GOF measures consist of Anderson-Darling (\code{AD}) and Cramer-von Misses (\code{CVM}) statistics.}
+\value{A vector of goodness-of-fit measures consist of Anderson-Darling (\code{AD}) and Cramer-von Misses (\code{CVM}) statistics.}
 \references{
 M. Teimouri 2020. Bias corrected maximum likelihood estimators under progressive type-I interval censoring scheme, \emph{Communications in Statistics-Simulation and Computation}, https://doi.org/10.10
 80/03610918.2020.1819320.

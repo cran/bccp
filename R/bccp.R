@@ -500,6 +500,7 @@ rtype2 <- function(n, R, param, mle, cdf, lb = 0, ub = Inf)
   return( data.frame(X = X, R = R))
 }
 ###################################################################################################
+
 fitype2 <- function(plan, param, mle, cdf, pdf, lb = 0, ub = Inf, N = 100)
 {
   d <- length(mle)
@@ -507,13 +508,13 @@ fitype2 <- function(plan, param, mle, cdf, pdf, lb = 0, ub = Inf, N = 100)
   X <- plan$X
   m <- length(R)
   n <- sum(R) + length(R)
+  S_r <- S_k <- S_rk <- rep(NA, m)
   if( length(param) != d ) stop("The length of parameter vector and ML estimators must be the same.")
   D2_e <- D2_o <- matrix (NA, nrow = d, ncol = d)
-  integrand0 <- integrand1 <- integrand2 <- function(x){}
-  for(k in 1:d) assign(param[k], mle[k])
-  first0 <- sapply(1:d, function(i) D( bquote(log(.(pdf))), param[i]))
-  first1 <- sapply(1:d, function(i) D( bquote(log(.(pdf))), param[i]))
-# first2 <- sapply(1:d, function(i) D( bquote(log(1 - .(cdf))), param[i]))
+  PDF <- CDF <- integrand_e <- integrand_r <- integrand_k <- integrand_rk <- function(x){}
+  for(j in 1:d) assign(param[j], mle[j])
+  first_e <- sapply(1:d, function(i) D( bquote(log(.(pdf))), param[i]))
+  first_o <- sapply(1:d, function(i) D( bquote(   (.(pdf))), param[i]))
   for (r in 1:d)
   {
     for (k in r:d)
@@ -549,27 +550,37 @@ fitype2 <- function(plan, param, mle, cdf, pdf, lb = 0, ub = Inf, N = 100)
             for (j in 1:s) Prod <- Prod*(n-sum(R[1:j])-j)
             C_s  <- n*Prod
           }
-          body(integrand0) <- bquote(.(first0[[r]])*.(first0[[k]])*.(pdf)*(1 - .(cdf))^(R_is-1))
-          dd <- simpson(integrand0, lb, ub, N)
-          I1 <- I1 + C_s*C_is*dd
+          body(integrand_e) <- bquote(.(first_e[[r]])*.(first_e[[k]])*.(pdf)*(1 - .(cdf))^(R_is-1))
+          I1 <- I1 + C_s*C_is*simpson(integrand_e, lb, ub, N)
         }
       }
       D2_e[r , k] <- I1
-      D2_e[k , r] <- I1
-  #      body(integrand1) <- bquote(.(first1[[r]])*.(first1[[k]]))
-  #      body(integrand2) <- bquote(.(first2[[r]])*.(first2[[k]]))
-  #      D2_o[r , k] <- sum( integrand1(X) + R*integrand2(X) )
-  #      D2_o[k , r] <- D2_o[r , k]
+      D2_e[k , r] <- D2_e[r , k]
+      second <- D(first_o[[r]], param[k])
+      body(integrand_rk) <- bquote(.(second))
+      body(integrand_rk) <- bquote(.(first_o[[r]])*.(first_o[[k]]))
+      body(integrand_r) <-  bquote(.(first_o[[r]]))
+      body(integrand_k) <-  bquote(.(first_o[[k]]))
+      for (i in 1:m)
+      {
+        S_rk[i] <- simpson(integrand_rk, lb, X[i], N)
+        S_r[i]  <- simpson(integrand_r,  lb, X[i], N)
+        S_k[i]  <- simpson(integrand_k,  lb, X[i], N)
+      }
+      body(PDF) <- bquote(.(pdf))
+      body(CDF) <- bquote(.(cdf))
+      D2_o[r , k] <- -sum( integrand_rk(X)/PDF(X) - integrand_r(X)*integrand_k(X)/PDF(X)^2 -
+                             R*S_rk/(1-CDF(X)) - R*S_r*S_k/(1-CDF(X))^2, na.rm = TRUE )
+      D2_o[k , r] <- D2_o[r , k]
     }
   }
   #  if ( sum( is.nan(D2) > 0 ) ) stop( "Try for another censoring scheme." )
   #  if(any(eigen(D2)$values <= 10e-15)) stop("The Hessian matrix is not invertible.")
   colnames(D2_e) <- param
-  # colnames(D2_o) <- param
+  colnames(D2_o) <- param
   rownames(D2_e) <- param
-  # colnames(D2_o) <- param
-  # return(list( "FI.expected" = D2_e, "FI.observed" = D2_o ) )
-   return(list( "FI.expected" = D2_e ) )
+  colnames(D2_o) <- param
+  return(list( "FI.expected" = D2_e, "FI.observed" = D2_o ) )
 }
 ###################################################################################################
 coxbctype2 <- function(plan, param, mle, cdf, pdf, lb = 0, ub = Inf, N = 100)
@@ -707,17 +718,39 @@ bootbctype2 <- function(plan, param, mle, cdf, pdf, lb = 0, ub = Inf, nboot = 20
     }
     ML[i,]<- suppressWarnings( optim(mle, fn = g, x = X, method = "Nelder-Mead")$par )
   }
-  bias.mean <- as.matrix( apply(ML, 2, mean) - mle )
-  bias.median <- as.matrix( apply(ML, 2, median) - mle )
+  bias <- apply(ML, 2, mean) - mle
+  mle.corrected<- mle - bias
+  FI.corrected <- fitype2(plan = plan, param = param, mle = mle.corrected,
+                          cdf = cdf, pdf = pdf, lb = lb, ub = ub, N = 200)$FI.expected
+  FI.uncorrected <- fitype2(plan = plan, param = param, mle = mle,
+                            cdf = cdf, pdf = pdf, lb = lb, ub = ub, N = 200)$FI.expected
+  cov.corrected <- solve(FI.corrected)
+  cov <- solve(FI.uncorrected)
   LPCI <- sapply(1:d, function(i)quantile( ML[,i], (1 - coverage)/2 ) )
   UPCI <- sapply(1:d, function(i)quantile(ML[,i], 1 - (1 - coverage)/2 ) )
-  cov <- cov(ML)
   colnames(cov) <- param
   rownames(cov) <- param
-  out1 <- cbind( bias.mean, bias.median, LPCI, UPCI )
-  colnames(out1) <- c("bias from mean", "bias from median", "LPCI", "UPCI")
+  colnames(cov.corrected) <- param
+  rownames(cov.corrected) <- param
+  out1 <- cbind( bias, LPCI, UPCI )
+  colnames(out1) <- c("bias", "LPCI", "UPCI")
   rownames(out1) <- param
-  return(list ( summary = out1, cov = cov) )
+  out1 <- as.matrix(rbind(LPCI, UPCI, mle, bias, mle.corrected), ncol = d,
+                    nrow = 5, byrow = TRUE)
+  colnames(out1) <- param
+  measure_uncorrected <- goftype2(plan = plan, param = param,
+                                  mle = mle, cdf = cdf, pdf = pdf)
+  measure_corrected <- goftype2(plan = plan, param = param,
+                                mle = mle.corrected, cdf = cdf, pdf = pdf)
+  FI.corrected <- fitype2(plan = plan, param = param, mle = mle.corrected,
+                          cdf = cdf, pdf = pdf, lb = lb, ub = ub, N = 200)$FI.expected
+  out2 <- rbind(c(measure_uncorrected[1], measure_uncorrected[2],
+                  measure_uncorrected[3]), c(measure_corrected[1], measure_corrected[2],
+                                             measure_corrected[3]))
+  colnames(out2) <- c("AD", "CVM", "KS")
+  rownames(out2) <- c("uncorrected", "corrected")
+  return(list(cov = cov, cov.corrected = cov.corrected,
+              estimates = out1, measures = out2))
 }
 ###################################################################################################
 bootbctype1 <- function(plan, param, mle, cdf, lb = 0, ub = Inf, nboot = 200, coverage = 0.95)

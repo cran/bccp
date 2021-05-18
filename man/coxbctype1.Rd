@@ -27,7 +27,7 @@ row       \tab Time interval          \tab \eqn{{\bf{X}}}\tab \eqn{{\bf{R}}}\cr
 \item{lb}{Lower bound of the family's support. That is zero by default.}
 }
 \details{For some families of distributions whose support is the positive semi-axis, i.e., \eqn{x>0}, the cumulative distribution function (cdf) may not be differentiable. In this case, the lower bound of the support of random variable, i.e., \code{lb} that is zero by default, must be chosen some positive small value to ensure the differentiability of the cdf.}
-\value{A list of the outputs including: a matric that represents the variance-covariance matrix of the MLE, a matrix that represents the variance-covariance matrix of the bias corrected MLE, a list of three outputs including MLE, bias of MLE, and bias corrected MLE, a list of godness-of-fit measures consists of Anderson-Darling (\code{AD}), Cramer-von Misses (\code{CVM}), log-likelihood statistics.}
+\value{A list of the outputs including: a matric that represents the variance-covariance matrix of the MLE, a matrix that represents the variance-covariance matrix of the bias corrected MLE, a list of three outputs including MLE, bias of MLE, and bias corrected MLE, a list of goodness-of-fit measures consists of Anderson-Darling (\code{AD}), Cramer-von Misses (\code{CVM}), and Kolmogorov-Smirnov (\code{KS}) statistics.}
 \references{
 Z. Chen 2000. A new two-parameter lifetime distribution with bathtub shape or increasing failure rate function, \emph{Statistics & Probability Letters}, 49 (2), 155-161.
 
